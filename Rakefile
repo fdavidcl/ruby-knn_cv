@@ -8,3 +8,7 @@ Rake::TestTask.new(:test) do |t|
 end
 
 task :default => :spec
+
+require 'rake/extensiontask'
+spec = Gem::Specification.load('feature-selection.gemspec')
+Rake::ExtensionTask.new('c_knn', spec)
