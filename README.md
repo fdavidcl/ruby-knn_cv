@@ -1,8 +1,6 @@
 # KnnCv
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/knn_cv`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+A native kNN leave-one-out technique implementation (oriented to feature selection) for Ruby based on the 'class' package for R.
 
 ## Installation
 
@@ -22,15 +20,22 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+This gem provides very basic functionality in a straight-forward manner. `Classifier` objects can be created in order to evaluate kNN several times:
 
-## Development
+```ruby
+knn = KnnCv::Classifier.new k, data, Random.new
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+where `k` represents the number of neighbors to be considered, `data` must be an `Array` of instances, which in turn are numeric `Array`s. The third argument is a `Random` object that can be used to ensure reproducibility.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To evaluate the behavior of the classifier over certain features, use the `fitness_for` method:
+
+```ruby
+knn.fitness_for [0, 1, 0, 0, 1, 0, 1, 1, 1]
+```
+
+The argument must be a binary `Array` (or other type of object that converts to a binary `Array`, such as [`BitArray`](https://github.com/ingramj/bitarray)).
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/knn_cv.
-
+Bug reports and pull requests are welcome at https://github.com/fdavidcl/knn_cv.
