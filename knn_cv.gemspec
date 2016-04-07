@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{A native kNN leave-one-out technique implementation}
   spec.description   = %q{A native kNN leave-one-out technique implementation for Ruby based on the 'class' package for R.}
   spec.homepage      = "https://github.com/fdavidcl/ruby-knn_cv"
+  spec.licenses      = ["GPL-3.0+"]
 
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
   # delete this section to allow pushing this gem to any host.
