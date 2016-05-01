@@ -23,10 +23,10 @@ Or install it yourself as:
 This gem provides very basic functionality in a straight-forward manner. `Classifier` objects can be created in order to evaluate kNN several times:
 
 ```ruby
-knn = KnnCv::Classifier.new k, data, Random.new
+knn = KnnCv::Classifier.new k, instances, classes, numeric_attrs, Random.new
 ```
 
-where `k` represents the number of neighbors to be considered, `data` must be an `Array` of instances, which in turn are numeric `Array`s. The third argument is a `Random` object that can be used to ensure reproducibility.
+where `k` represents the number of neighbors to be considered, `instances` must be an `Array` of instances, which in turn are numeric `Array`s, a `classes` Array with classes numbered from 0, and `numeric_attrs` a binary (0 or 1) vector indicating which attributes are to be treated as numeric. The last argument is a `Random` object that can be used to ensure reproducibility.
 
 To evaluate the behavior of the classifier over certain features, use the `fitness_for` method:
 
