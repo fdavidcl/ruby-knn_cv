@@ -184,54 +184,58 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
   return rb_float_new(fitness);
 }
 
-VALUE method_c_knn_initialize(VALUE self, VALUE rb_k, VALUE rb_dataset, VALUE rb_random_par) {
-  int ncol, nrow;
+VALUE method_c_knn_initialize(VALUE self, VALUE rb_k, VALUE data, VALUE rb_class, VALUE rb_numeric, VALUE rb_random_par) {
+  long int ncol, nrow;
 
   double * instances = NULL;
   int * classes = NULL;
   int * which_numeric = NULL;
 
-  VALUE data = rb_funcall(rb_dataset, rb_intern("instances"), 0);
-  VALUE rb_class = rb_funcall(rb_dataset, rb_intern("classes"), 0);
-  VALUE rb_numeric = rb_funcall(rb_dataset, rb_intern("numeric_attrs"), 0);
+  // VALUE data = rb_funcall(rb_dataset, rb_intern("instances"), 0);
+  // VALUE rb_class = rb_funcall(rb_dataset, rb_intern("classes"), 0);
+  // VALUE rb_numeric = rb_funcall(rb_dataset, rb_intern("numeric_attrs"), 0);
 
   // Define global variables
   rb_iv_set(self, "@num_neighbors", rb_k);
   nrow = RARRAY_LEN(data);
-  rb_iv_set(self, "@nrow", INT2NUM(nrow));
-  ncol = RARRAY_LEN(rb_ary_entry(data, 0));
-  rb_iv_set(self, "@ncol", INT2NUM(ncol));
-  rb_iv_set(self, "@nclass", rb_funcall(rb_dataset, rb_intern("class_count"), 0));
-  FLOAT_MAX = NUM2DBL(rb_intern("Float::MAX"));
-  rb_iv_set(self, "@rng", rb_random_par);
+  if (nrow > 0) {
+    rb_iv_set(self, "@nrow", INT2NUM(nrow));
+    ncol = RARRAY_LEN(rb_ary_entry(data, 0));
+    rb_iv_set(self, "@ncol", INT2NUM(ncol));
+    rb_iv_set(self, "@nclass", rb_funcall(rb_funcall(rb_class, rb_intern("uniq"), 0), rb_intern("length"), 0));
+    FLOAT_MAX = NUM2DBL(rb_intern("Float::MAX"));
+    rb_iv_set(self, "@rng", rb_random_par);
 
-  instances = (double*) malloc(sizeof(double) * nrow * ncol);
+    instances = (double*) malloc(sizeof(double) * nrow * ncol);
 
-  int i, j;
-  for (i = 0; i < nrow; i++) {
-    for (j = 0; j < ncol; j++) {
-      if (TYPE(rb_ary_entry(rb_ary_entry(data, i), j)) == T_STRING) {
-        rb_raise(rb_eStandardError, "A string was found within the dataset. Aborting...");
-      } else
-      instances[i * ncol + j] = NUM2DBL(rb_ary_entry(rb_ary_entry(data, i), j));
+    int i, j;
+    for (i = 0; i < nrow; i++) {
+      for (j = 0; j < ncol; j++) {
+        if (TYPE(rb_ary_entry(rb_ary_entry(data, i), j)) == T_STRING) {
+          rb_raise(rb_eArgError, "A string was found within the dataset. Aborting...");
+        } else
+        instances[i * ncol + j] = NUM2DBL(rb_ary_entry(rb_ary_entry(data, i), j));
+      }
     }
+
+    classes = (int*) malloc(sizeof(int) * nrow);
+
+    for (i = 0; i < nrow; i++) {
+      classes[i] = NUM2INT(rb_ary_entry(rb_class, i));
+    }
+
+    which_numeric = (int*) malloc(sizeof(int) * ncol);
+
+    for (j = 0; j < ncol; j++) {
+      which_numeric[j] = NUM2INT(rb_ary_entry(rb_numeric, j));
+    }
+
+    rb_iv_set(self, "@instances", Data_Wrap_Struct(C_instances, NULL, c_knn_free, instances));
+    rb_iv_set(self, "@classes", Data_Wrap_Struct(C_classes, NULL, c_knn_free, classes));
+    rb_iv_set(self, "@which_numeric", Data_Wrap_Struct(C_numerics, NULL, c_knn_free, which_numeric));
+  } else {
+    rb_raise(rb_eArgError, "Attempted to create a classifier for an empty dataset. Aborting...");
   }
-
-  classes = (int*) malloc(sizeof(int) * nrow);
-
-  for (i = 0; i < nrow; i++) {
-    classes[i] = NUM2INT(rb_ary_entry(rb_class, i));
-  }
-
-  which_numeric = (int*) malloc(sizeof(int) * ncol);
-
-  for (j = 0; j < ncol; j++) {
-    which_numeric[j] = NUM2INT(rb_ary_entry(rb_numeric, j));
-  }
-
-  rb_iv_set(self, "@instances", Data_Wrap_Struct(C_instances, NULL, c_knn_free, instances));
-  rb_iv_set(self, "@classes", Data_Wrap_Struct(C_classes, NULL, c_knn_free, classes));
-  rb_iv_set(self, "@which_numeric", Data_Wrap_Struct(C_numerics, NULL, c_knn_free, which_numeric));
 
   return self;
 }
@@ -245,6 +249,6 @@ void Init_c_knn(void) {
   C_classes = rb_define_class_under(Classifier, "Classes", rb_cObject);
   C_numerics = rb_define_class_under(Classifier, "Numerics", rb_cObject);
 
-  rb_define_method(Classifier, "initialize", method_c_knn_initialize, 3);
+  rb_define_method(Classifier, "initialize", method_c_knn_initialize, 5);
   rb_define_method(Classifier, "fitness_for", method_c_knn_leaveoneout, 1);
 }
